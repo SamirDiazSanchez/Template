@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build">
+  <Sdk Name="Microsoft.Build.Sql" Version="1.0.0-rc1" />
+  <PropertyGroup>
+    <Name>DataBase</Name>
+    <DSP>Microsoft.Data.Tools.Schema.Sql.Sql160DatabaseSchemaProvider</DSP>
+    <ModelCollation>1033, CI</ModelCollation>
+    <ProjectGuid>{00000000-0000-0000-0000-000000000000}</ProjectGuid>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Seeds" />
+    <Folder Include="StoreProcedures" />
+    <Folder Include="StoreProcedures\Module" />
+    <Folder Include="StoreProcedures\Profile" />
+    <Folder Include="StoreProcedures\Session" />
+    <Folder Include="StoreProcedures\User" />
+    <Folder Include="Tables" />
+  </ItemGroup>
+  <ItemGroup>
+    <PostDeploy Include="Seeds\DefaultParameters.sql" />
+  </ItemGroup>
+</Project>

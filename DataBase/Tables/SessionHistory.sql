@@ -1,0 +1,8 @@
+CREATE TABLE [dbo].[SessionHistory]
+(
+  [SessionId] UNIQUEIDENTIFIER NOT NULL PRIMARY KEY, 
+  [UserId] UNIQUEIDENTIFIER NOT NULL, 
+  [Created] DATETIME NOT NULL, 
+  [Closed] DATETIME NOT NULL, 
+  CONSTRAINT [FK_SessionHistory_ToUser] FOREIGN KEY ([UserId]) REFERENCES [User]([UserId])
+)
