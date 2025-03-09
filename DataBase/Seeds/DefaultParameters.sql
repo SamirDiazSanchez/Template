@@ -5,7 +5,7 @@ DECLARE @ProfileName VARCHAR(50) = 'Admin';
 DECLARE @UserId UNIQUEIDENTIFIER = 'fe5eed96-0b2a-4e9a-aa2a-ab41a04b1326';
 DECLARE @FullName VARCHAR(100) = 'Samir Diaz';
 DECLARE @Email VARCHAR(100) = 'samir.diaz.1206@gmail.com';
-DECLARE @Modules VARCHAR(MAX) = 'Profile, User';
+DECLARE @Modules VARCHAR(MAX) = 'Dashboard,Profile,User';
 
 DECLARE @Date DATETIME = GETUTCDATE();
 
