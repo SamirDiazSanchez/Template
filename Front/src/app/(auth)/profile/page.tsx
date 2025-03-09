@@ -208,7 +208,7 @@ const CustomComponent = ({
               getOptionLabel={(option) => option.name}
               value={field.value}
               onChange={(_, v) => {
-                const uniqueValues = v.filter((item, index, self) => index === self.findIndex((t) => t.profileId === item.profileId));
+                const uniqueValues = v.filter((item, index, self) => index === self.findIndex((t) => t.name === item.name));
                 field.onChange(uniqueValues);
               }} 
               renderInput={(params) => (
