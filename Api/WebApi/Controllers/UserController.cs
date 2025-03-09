@@ -11,48 +11,60 @@ namespace WebApi.Controllers
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
-        private readonly UserBll userBll = new UserBll(Global.ConnectionString!);
+        private readonly UserBll userBll = new(Settings.ConnectionString!);
 
         [HttpGet("{page}")]
         public IActionResult Get(int page)
         {
-            User user = new User { Page = page };
-            List<User>? users = userBll.GetList(user);
+            _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.Sid), out Guid sessionId);
+            _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
 
-            return Ok(new { Result = users, Rows = user.Rows });
+            User user = new() { Page = page, SessionId = sessionId, UserCreated = userId };
+            List<User>? users = userBll.GetList(user);
+            if (user.Code == null) return Ok(new { Result = users, Rows = user.Rows });
+            else if (user.Code == 2) return Forbid();
+            else return BadRequest(user.GetOutput());
         }
 
         [HttpPost]
         public IActionResult Create([FromBody] User user)
         {
             _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
+            _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.Sid), out Guid sessionId);
+            user.SessionId = sessionId;
             user.UserCreated = userId;
+
             userBll.Save(user);
             if (user.Code == null) return Ok();
-
-            return BadRequest(user.GetOutput());
+            else if (user.Code == 2) return Forbid();
+            else return BadRequest(user.GetOutput());
         }
 
         [HttpPut]
         public IActionResult Update([FromBody] User user)
         {
             _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
+            _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.Sid), out Guid sessionId);
+            user.SessionId = sessionId;
             user.UserUpdated = userId;
-            userBll.Save(user);
+            
+            userBll.Update(user);
             if (user.Code == null) return Ok();
-
-            return BadRequest(user.GetOutput());
+            else if (user.Code == 2) return Forbid();
+            else return BadRequest(user.GetOutput());
         }
 
         [HttpDelete("{id}")]
         public IActionResult Delete(Guid id)
         {
             _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
-            User user = new User { UserId = id, UserUpdated = userId };
+            _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.Sid), out Guid sessionId);
+            
+            User user = new() { UserId = id, UserUpdated = userId, SessionId = sessionId };
             userBll.Delete(user);
             if (user.Code == null) return Ok();
-
-            return BadRequest(user.GetOutput());
+            else if (user.Code == 2) return Forbid();
+            else return BadRequest(user.GetOutput());
         }
     }
 }

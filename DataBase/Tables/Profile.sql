@@ -1,7 +1,8 @@
 CREATE TABLE [dbo].[Profile]
 (
   [ProfileId] UNIQUEIDENTIFIER NOT NULL PRIMARY KEY, 
-  [ProfileName] VARCHAR(50) NOT NULL UNIQUE, 
+  [ProfileName] VARCHAR(50) NOT NULL UNIQUE,
+  [Modules] VARCHAR(MAX) NULL,
   [Created] DATETIME NOT NULL, 
   [Updated] DATETIME NOT NULL, 
   [UserCreated] UNIQUEIDENTIFIER NULL, 

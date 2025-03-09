@@ -1,66 +1,42 @@
 CREATE PROCEDURE [dbo].[Get_User]
-  @UserName VARCHAR(100) = NULL,
-	@Password VARCHAR(150) = NULL,
+	@UserCreated UNIQUEIDENTIFIER = NULL,
+	@SessionId UNIQUEIDENTIFIER = NULL,
 	@UserId UNIQUEIDENTIFIER = NULL,
 	@Page INT = NULL,
 	@Filter VARCHAR(200) = NULL,
-	@Rows INT OUT
+	@Rows INT OUT,
+	@Code INT OUT,
+	@Message VARCHAR(MAX) OUT
 AS
 SET NOCOUNT ON;
 BEGIN
+	IF @SessionId IS NULL
+	OR @UserCreated IS NULL
+	BEGIN
+		SET @Code = 1;
+		SET @Message = 'Parameter is required';
+		RETURN;
+	END
+
+	IF NOT EXISTS (SELECT 1 FROM [Session] WHERE [SessionId] = @SessionId AND [UserId] = @UserCreated)
+	BEGIN
+		SET @Code = 2;
+		SET @Message = 'Invalid account';
+		RETURN;
+	END
+
 	IF @UserId IS NOT NULL
 	BEGIN
 		SELECT
 			A.[UserId],
-			A.[Mail],
+			A.[Email],
 			A.[FullName],
-			A.[UserName],
 			A.[ProfileId],
 			B.[ProfileName],
 			A.[IsActive]
 		FROM [User] A
 		INNER JOIN [Profile] B ON A.[ProfileId] = B.[ProfileId]
-		WHERE A.[UserId] = @UserId
-		AND A.[IsActive] = 1;
-		RETURN;
-	END
-
-	IF @UserName IS NOT NULL
-	BEGIN
-		IF @Password IS NOT NULL
-		BEGIN
-			SELECT
-				A.[UserId],
-				A.[Mail],
-				A.[FullName],
-				A.[UserName],
-				A.[ProfileId],
-				B.[ProfileName],
-				A.[IsActive]
-			FROM [User] A
-			INNER JOIN [Profile] B ON A.[ProfileId] = B.[ProfileId]
-			WHERE A.[UserName] = @UserName
-			AND A.[Password] = @Password
-			AND A.[IsActive] = 1;
-
-			SELECT @Rows = @@ROWCOUNT;
-			RETURN;
-		END
-
-		SELECT
-			A.[UserId],
-			A.[Mail],
-			A.[FullName],
-			A.[UserName],
-			A.[ProfileId],
-			B.[ProfileName],
-			A.[IsActive]
-		FROM [User] A
-		INNER JOIN [Profile] B ON A.[ProfileId] = B.[ProfileId]
-		WHERE A.[UserName] = @UserName
-		AND A.[IsActive] = 1;
-
-		SELECT @Rows = @@ROWCOUNT;
+		WHERE A.[UserId] = @UserId;
 		RETURN;
 	END
 
@@ -68,42 +44,51 @@ BEGIN
 	BEGIN
 		IF @Filter IS NOT NULL
 		BEGIN
+			SELECT @Rows = COUNT(*)
+			FROM [User] A
+			INNER JOIN [Profile] B ON A.[ProfileId] = B.[ProfileId]
+			WHERE A.[Email] != 'system'
+			AND (A.[FullName] LIKE '%' + @Filter + '%'
+			OR A.[Email] LIKE '%' + @Filter + '%'
+			OR B.[ProfileName] LIKE '%' + @Filter + '%'); 
+
 			SELECT
 				A.[UserId],
-				A.[Mail],
+				A.[Email],
 				A.[FullName],
-				A.[UserName],
 				A.[ProfileId],
 				B.[ProfileName],
 				A.[IsActive]
 			FROM [User] A
 			INNER JOIN [Profile] B ON A.[ProfileId] = B.[ProfileId]
-			WHERE A.[UserName] LIKE '%' + @Filter + '%'
-			OR A.[FullName] LIKE '%' + @Filter + '%'
-			OR A.[Mail] LIKE '%' + @Filter + '%'
-			OR B.[ProfileName] LIKE '%' + @Filter + '%'
-			ORDER BY A.[UserName]
-			OFFSET (@Page * 10) ROWS
+			WHERE A.[Email] != 'system'
+			AND (A.[FullName] LIKE '%' + @Filter + '%'
+			OR A.[Email] LIKE '%' + @Filter + '%'
+			OR B.[ProfileName] LIKE '%' + @Filter + '%')
+			ORDER BY A.[FullName]
+			OFFSET ((@Page - 1) * 10) ROWS
 			FETCH NEXT 10 ROWS ONLY;
 			
-			SELECT @Rows = @@ROWCOUNT;
 			RETURN;
 		END
 
+		SELECT @Rows = COUNT(*)
+		FROM [User] A
+		INNER JOIN [Profile] B ON A.[ProfileId] = B.[ProfileId]
+		WHERE A.[Email] != 'system';
+
 		SELECT
 			A.[UserId],
-			A.[Mail],
+			A.[Email],
 			A.[FullName],
-			A.[UserName],
 			A.[ProfileId],
 			B.[ProfileName],
 			A.[IsActive]
 		FROM [User] A
 		INNER JOIN [Profile] B ON A.[ProfileId] = B.[ProfileId]
-		ORDER BY A.[UserName]
-		OFFSET (@Page * 10) ROWS
+		WHERE A.[Email] != 'system'
+		ORDER BY A.[FullName]
+		OFFSET ((@Page - 1) * 10) ROWS
 		FETCH NEXT 10 ROWS ONLY;
-
-		SELECT @Rows = @@ROWCOUNT;
 	END
 END

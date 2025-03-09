@@ -1,10 +1,11 @@
 using System.Security.Claims;
 using BusinessLayer.Logic;
-using Domain.helpers;
 using Domain.models;
 using JwtHandler;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Google.Apis.Auth;
+using Domain.helpers;
 
 namespace WebApi.Controllers
 {
@@ -12,36 +13,45 @@ namespace WebApi.Controllers
     [Route("api/[controller]")]
     public class AuthenticationController : ControllerBase
     {
-        private readonly SessionBll sessionBll = new(Global.ConnectionString!);
-        private readonly UserBll userBll = new(Global.ConnectionString!);
-        private readonly CookieOptions cookieOptions = new CookieOptions
+        private readonly SessionBll sessionBll = new(Settings.ConnectionString!);
+        private readonly UserBll userBll = new(Settings.ConnectionString!);
+        private readonly CookieOptions cookieOptions = new()
         {
             HttpOnly = true,
             Secure = true,
-            SameSite = SameSiteMode.Strict,
-            Expires = DateTime.UtcNow.AddMinutes(6)
+            SameSite = SameSiteMode.None,
+            Expires = DateTime.UtcNow.AddMinutes(15)
         };
 
         [HttpPost]
-        public IActionResult Authenticate([FromBody] Authentication authenticacion) {
-            if (string.IsNullOrEmpty(authenticacion.UserName) || string.IsNullOrEmpty(authenticacion.Password)) return Unauthorized();
+        public async Task<IActionResult> AuthenticateAsync([FromBody] GoogleAuthRequest request)
+        {
+            if (string.IsNullOrEmpty(request.Credential)) return BadRequest(new { Message = "Invalid parameter" });
+            try {
+                GoogleJsonWebSignature.ValidationSettings settings = new() { Audience = [Settings.GoogleClientId] };
+                GoogleJsonWebSignature.Payload payload = await GoogleJsonWebSignature.ValidateAsync(request.Credential, settings);
+            
+                string email = payload.Email;
+                object Audience = payload.Audience;
 
-            User? user = userBll.GetByUserNameAndPassword(authenticacion.UserName, authenticacion.Password);
+                Session session = new () { Email = email };
 
-            if (user ==  null) return Unauthorized();
+                sessionBll.Create(session);
 
-            Session session = new () { UserId = user.UserId };
-            sessionBll.Save(session);
+                if (session.Code != null) return BadRequest(new { Message = session.Message });
 
-            if (session.Code != null) return BadRequest(session.Message);
+                if (!session.UserId.HasValue || !session.Id.HasValue) return BadRequest(new { Message = "Something goes wrong" });
 
-            if (!user.UserId.HasValue || !session.Id.HasValue) return Unauthorized();
-
-            string accessToken = Handler.GenerateAccessToken(user.UserId.Value, session.Id.Value, user.ProfileName!);
-            string refreshToken = Handler.GenerateRefreshToken(user.UserId.Value, session.Id.Value, user.ProfileName!);
-            Response.Cookies.Append("accessToken", accessToken!, cookieOptions);
-            Response.Cookies.Append("refreshToken", refreshToken!, cookieOptions);
-            return Ok();
+                string accessToken = Handler.GenerateAccessToken(session.UserId.Value, session.Id.Value, session.ProfileName!);
+                string refreshToken = Handler.GenerateRefreshToken(session.UserId.Value, session.Id.Value, session.ProfileName!);
+                Response.Cookies.Append("accessToken", accessToken!, cookieOptions);
+                Response.Cookies.Append("refreshToken", refreshToken!, cookieOptions);
+                return Ok(new { Name = session.FullName, Profile = session.ProfileName, ModuleList = session.ModuleList });
+            }
+            catch (Exception ex) {
+                return BadRequest(ex);
+            }
+            
         }
 
         [Authorize(AuthenticationSchemes = "RefreshToken")]
@@ -51,7 +61,14 @@ namespace WebApi.Controllers
             _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
             _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.Sid), out Guid sessionId);
 
-            User? user = userBll.GetById(userId);
+            User _user = new ()
+            {
+                UserId = userId,
+                SessionId = sessionId,
+                UserCreated = userId
+            };
+
+            User? user = userBll.GetById(_user);
 
             if (user == null) {
                 sessionBll.Delete(new { SessionId = sessionId });
@@ -73,18 +90,15 @@ namespace WebApi.Controllers
         public IActionResult Logout()
         {
             _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.Sid), out Guid sessionId);
+            
+            Session session = new () {  SessionId = sessionId };
+            sessionBll.Delete(session);
 
-            sessionBll.Delete(new { SessionId = sessionId });
             Response.Cookies.Delete("accessToken");
             Response.Cookies.Delete("refreshToken");
-            return Ok();
-        }
 
-        [HttpPost("logout/user")]
-        public IActionResult UserLogout([FromBody] Authentication authentication) {
-            sessionBll.Delete(new { UserName = authentication.UserName });
-            Response.Cookies.Delete("accessToken");
-            Response.Cookies.Delete("refreshToken");
+            Output response = session.GetOutput();
+            if (response.Code != null) return BadRequest(response);
             return Ok();
         }
     }

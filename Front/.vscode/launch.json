@@ -1,0 +1,16 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Front-end launch",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "npm run dev",
+      "serverReadyAction": {
+        "pattern": "localhost:(\\d+)",
+        "uriFormat": "https://localhost:%s",
+        "action": "openExternally"
+      }
+    }
+  ]
+}

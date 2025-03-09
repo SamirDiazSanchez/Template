@@ -5,7 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 var builder = WebApplication.CreateBuilder(args);
 
-Global.SetParameters(builder.Configuration);
+Settings.SetParameters();
 
 builder.Services.AddAuthentication(options =>
 {
@@ -40,6 +40,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = Handler.RefreshValidationParameters();
 });
 
+
 // Add services to the container.
 
 builder.Services.AddControllers();
@@ -49,12 +50,24 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
     {
-        Title = $"{Global.ProjectName}_Swagger_Collection",
+        Title = $"{Settings.ProjectName}_Swagger_Collection",
         Version = "1.0"
     });
 });
 
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(
+        "CorsPolicy",
+        policy => policy.WithOrigins(Settings.CorsPolicy)
+            .AllowAnyMethod()
+            .AllowAnyHeader()
+            .AllowCredentials());
+});
+
 var app = builder.Build();
+
+app.UseCors("CorsPolicy");
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

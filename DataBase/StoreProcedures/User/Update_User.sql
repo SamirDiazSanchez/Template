@@ -1,6 +1,7 @@
 CREATE PROCEDURE [dbo].[Update_User]
+	@SessionId UNIQUEIDENTIFIER = NULL,
  	@UserId UNIQUEIDENTIFIER = NULL,
-	@Mail VARCHAR(100) = NULL,
+	@Email VARCHAR(100) = NULL,
 	@FullName VARCHAR(100) = NULL,
 	@UserName VARCHAR(100) = NULL,
 	@ProfileId UNIQUEIDENTIFIER = NULL,
@@ -11,16 +12,22 @@ AS
 SET NOCOUNT ON;
 DECLARE @currentDate DATETIME = GETUTCDATE();
 BEGIN
-	IF @UserUpdated IS NULL
-	OR NOT EXISTS (SELECT [UserId] FROM [User] WHERE [UserId] = @UserUpdated)
+	IF @SessionId IS NULL
+	OR @UserUpdated IS NULL
 	BEGIN
 		SET @Code = 1;
-		SET @Message = 'Ivalid parameter';
+		SET @Message = 'Parameter is required';
 		RETURN;
 	END
 
-	IF @Mail IS NULL
-	OR PATINDEX('%[A-Za-z0-9._%+-]%@[A-Za-z0-9.-]%.[A-Za-z]%[A-Za-z]%', @Mail) = 0
+	IF NOT EXISTS (SELECT 1 FROM [Session] WHERE [SessionId] = @SessionId AND [UserId] = @UserUpdated)
+	BEGIN
+		SET @Code = 2;
+		SET @Message = 'Invalid account';
+		RETURN;
+	END
+
+	IF @Email IS NULL
 	OR @UserId IS NULL
 	OR @FullName IS NULL
 	OR @UserName IS NULL
@@ -32,7 +39,7 @@ BEGIN
 		AND [IsActive] = 1
 	)
 	BEGIN
-		SET @Code = 2;
+		SET @Code = 3;
 		SET @Message = 'Ivalid parameter';
 		RETURN;
 	END
@@ -41,7 +48,7 @@ BEGIN
 	BEGIN TRY
 		UPDATE [User]
 		SET [FullName] = @FullName,
-			[Mail] = @Mail,
+			[Email] = @Email,
 			[UserUpdated] = @UserUpdated,
 			[Updated] = @currentDate,
 			[IsActive] = 1

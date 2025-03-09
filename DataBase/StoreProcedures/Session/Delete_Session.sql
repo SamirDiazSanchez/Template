@@ -1,29 +1,21 @@
 CREATE PROCEDURE [dbo].[Delete_Session]
- 	@SessionId UNIQUEIDENTIFIER = NULL,
-	@UserName VARCHAR(100) = NULL,
+	@SessionId UNIQUEIDENTIFIER = NULL,
 	@Code INT OUT,
 	@Message VARCHAR(MAX) OUT
 AS
 SET NOCOUNT ON;
 DECLARE @currentDate DATETIME = GETUTCDATE();
+DECLARE @UserId UNIQUEIDENTIFIER;
 BEGIN
-	IF @UserName IS NULL AND @SessionId IS NULL
+	IF @SessionId IS NULL
 	BEGIN
-		SET @Code = 1;
+		SET @Code = 3;
 		SET @Message = 'Invalid parameter';
 		RETURN;
 	END
 
 	BEGIN TRANSACTION
 	BEGIN TRY
-		IF @UserName IS NOT NULL
-		BEGIN
-			SELECT @SessionId = A.[SessionId]
-			FROM [Session] A
-			INNER JOIN [User] B ON A.[UserId] = B.[UserId]
-			WHERE B.[UserName] = @UserName
-		END
-
 		INSERT INTO [SessionHistory]
 		(
 			[SessionId],
@@ -37,9 +29,10 @@ BEGIN
 			[Created],
 			@currentDate
 		FROM [Session]
-		WHERE [SessionId] = @SessionId
+		WHERE [SessionId] = @SessionId;
 
-		DELETE [Session] WHERE [SessionId] = @SessionId
+		DELETE [Session]
+		WHERE [SessionId] = @SessionId;
 
 		COMMIT TRANSACTION;
 	END TRY

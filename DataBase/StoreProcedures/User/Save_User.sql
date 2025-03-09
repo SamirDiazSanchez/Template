@@ -1,7 +1,7 @@
 CREATE PROCEDURE [dbo].[Save_User]
-  @Mail VARCHAR(100) = NULL,
+	@SessionId UNIQUEIDENTIFIER = NULL,
+  @Email VARCHAR(100) = NULL,
 	@FullName VARCHAR(100) = NULL,
-	@UserName VARCHAR(100) = NULL,
 	@ProfileId UNIQUEIDENTIFIER = NULL,
 	@UserCreated UNIQUEIDENTIFIER = NULL,
 	@Code INT OUT,
@@ -11,19 +11,26 @@ AS
 SET NOCOUNT ON;
 DECLARE @currentDate DATETIME = GETUTCDATE();
 BEGIN
-
-	IF @UserCreated IS NULL
-	OR NOT EXISTS (SELECT [UserId] FROM [User] WHERE [UserId] = @UserCreated)
+	-- VALIDATE SESSION PARAMETERS
+	IF @SessionId IS NULL
+	OR @UserCreated IS NULL
 	BEGIN
 		SET @Code = 1;
-		SET @Message = 'Required parameter';
+		SET @Message = 'Parameter is required';
 		RETURN;
 	END
 
-	IF @Mail IS NULL
-	OR PATINDEX('%[A-Za-z0-9._%+-]%@[A-Za-z0-9.-]%.[A-Za-z]%[A-Za-z]%', @Mail) = 0
+	-- VALIDATE SESSION
+	IF NOT EXISTS (SELECT 1 FROM [Session] WHERE [SessionId] = @SessionId AND [UserId] = @UserCreated)
+	BEGIN
+		SET @Code = 2;
+		SET @Message = 'Invalid account';
+		RETURN;
+	END
+
+	-- VALIDATE INPUT PARAMETERS
+	IF @Email IS NULL
 	OR @FullName IS NULL
-	OR @UserName IS NULL
 	OR @ProfileId IS NULL
 	OR NOT EXISTS (
 		SELECT [ProfileId]
@@ -32,7 +39,7 @@ BEGIN
 		AND [IsActive] = 1
 	)
 	BEGIN
-		SET @Code = 2;
+		SET @Code = 3;
 		SET @Message = 'Ivalid parameter';
 		RETURN;
 	END
@@ -44,9 +51,8 @@ BEGIN
 		INSERT INTO [User]
 		(
 			[UserId],
-			[Mail],
+			[Email],
 			[FullName],
-			[UserName],
 			[ProfileId],
 			[Created],
 			[Updated],
@@ -56,9 +62,8 @@ BEGIN
 		VALUES
 		(
 			@Id,
-			@Mail,
+			@Email,
 			@FullName,
-			@UserName,
 			@ProfileId,
 			@currentDate,
 			@currentDate,

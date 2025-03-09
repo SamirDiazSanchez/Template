@@ -10,7 +10,6 @@
   <ItemGroup>
     <Folder Include="Seeds" />
     <Folder Include="StoreProcedures" />
-    <Folder Include="StoreProcedures\Module" />
     <Folder Include="StoreProcedures\Profile" />
     <Folder Include="StoreProcedures\Session" />
     <Folder Include="StoreProcedures\User" />

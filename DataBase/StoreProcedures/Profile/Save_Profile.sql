@@ -1,6 +1,7 @@
 CREATE PROCEDURE [dbo].[Save_Profile]
+	@SessionId UNIQUEIDENTIFIER = NULL,
  	@ProfileName VARCHAR(50) = NULL,
-	@ModuleIds VARCHAR(MAX) = NULL,
+	@Modules VARCHAR(MAX) = NULL,
 	@UserCreated UNIQUEIDENTIFIER = NULL,
 	@Code INT OUT,
 	@Message VARCHAR(MAX) OUT,
@@ -9,29 +10,30 @@ AS
 SET NOCOUNT ON;
 DECLARE @currentDate DATETIME = GETUTCDATE();
 BEGIN
-	-- Control parameters
-	IF @UserCreated IS NULL
-	OR NOT EXISTS (SELECT [UserId] FROM [User] WHERE [UserId] = @UserCreated)
+	-- CONTROLE PARAMETERS
+	IF @SessionId IS NULL
+	OR @UserCreated IS NULL
 	BEGIN
 		SET @Code = 1;
-		SET @Message = 'Required parameter';
+		SET @Message = 'Parameter is required';
 		RETURN;
 	END
 
-	-- Content parameters
-	IF @ProfileName IS NULL
+	-- VALIDATE ACCOUNT
+	IF NOT EXISTS (SELECT 1 FROM [Session] WHERE [SessionId] = @SessionId AND [UserId] = @UserCreated)
 	BEGIN
 		SET @Code = 2;
-		SET @Message = 'Invalid parameter';
+		SET @Message = 'Invalid account';
 		RETURN;
 	END
 
-	-- Duplicate registers
-	IF EXISTS (SELECT [ProfileId] FROM[Profile] WHERE [ProfileName] = @ProfileName)
-	OR @ModuleIds IS NULL
+	-- VALIDATE PARAMETER
+	IF @ProfileName IS NULL
+	OR EXISTS (SELECT [ProfileId] FROM[Profile] WHERE [ProfileName] = @ProfileName)
+	OR @Modules IS NULL
 	BEGIN
 		SET @Code = 3;
-		SET @Message = 'Duplicate record';
+		SET @Message = 'Invalid parameter';
 		RETURN;
 	END
 
@@ -43,6 +45,7 @@ BEGIN
 		(
 			[ProfileId],
 			[ProfileName],
+			[Modules],
 			[Created],
 			[Updated],
 			[UserCreated],
@@ -52,29 +55,12 @@ BEGIN
 		(
 			@Id,
 			@ProfileName,
+			@Modules,
 			@currentDate,
 			@currentDate,
 			@UserCreated,
 			@UserCreated
 		);
-
-		INSERT INTO [Profile_Module]
-		(
-			[ModuleId],
-			[ProfileId],
-			[UserCreated],
-			[UserUpdated],
-			[Created],
-			[Updated]
-		)
-		SELECT
-			VALUE,
-			@Id,
-			@UserCreated,
-			@UserCreated,
-			@currentDate,
-			@currentDate
-		FROM STRING_SPLIT(@ModuleIds, ',');
 
 		COMMIT TRANSACTION;
 	END TRY

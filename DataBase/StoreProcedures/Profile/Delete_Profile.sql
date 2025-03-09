@@ -1,4 +1,5 @@
 CREATE PROCEDURE [dbo].[Delete_Profile]
+	@SessionId UNIQUEIDENTIFIER = NULL,
  	@ProfileId UNIQUEIDENTIFIER = NULL,
 	@UserUpdated UNIQUEIDENTIFIER = NULL,
 	@Code INT OUT,
@@ -7,22 +8,23 @@ AS
 SET NOCOUNT ON;
 DECLARE @currentDate DATETIME = GETUTCDATE();
 BEGIN
-	
-	IF @UserUpdated IS NULL
+	IF @SessionId IS NULL
+	OR @UserUpdated IS NULL
 	BEGIN
 		SET @Code = 1;
-		SET @Message = 'Required parameter';
+		SET @Message = 'Parameter is required';
+		RETURN;
+	END
+
+	IF NOT EXISTS (SELECT 1 FROM [Session] WHERE [SessionId] = @SessionId AND [UserId] = @UserUpdated)
+	BEGIN
+		SET @Code = 2;
+		SET @Message = 'Invalid account';
 		RETURN;
 	END
 
 	IF @ProfileId IS NULL
-	BEGIN
-		SET @Code = 2;
-		SET @Message = 'Invalid parameter';
-		RETURN;
-	END
-
-	IF EXISTS (
+	OR EXISTS (
 		SELECT [UserId]
 		FROM [User]
 		WHERE [ProfileId] = @ProfileId
@@ -30,7 +32,7 @@ BEGIN
 	)
 	BEGIN
 		SET @Code = 3;
-		SET @Message = 'Record in use';
+		SET @Message = 'Invalid parameter';
 		RETURN;
 	END
 

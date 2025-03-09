@@ -9,8 +9,8 @@ namespace Domain.models
         public Guid? ProfileId { get; set; }
         [RegularExpression(@"^[a-zA-Z0-9\s.-]+$", ErrorMessage = "Invalid character")]
         public string? ProfileName { get; set; }
-        public List<Module>? Modules { get; set; }
-        public string? ModuleIds { get; set; }
-        public bool? IsActive { get; set; }
+        public string? Modules { get; set; }
+        public List<string>? ModuleList { get; set; }
+        public new bool? IsActive { get; set; }
     }
 }
