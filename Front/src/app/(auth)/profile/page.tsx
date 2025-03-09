@@ -70,10 +70,13 @@ export default () => {
       .remove(profile.profileId)
       .then(() => Success('Profile deleted successfully'))
       .catch(ex => Error(ex.message))
-      .finally(() => getProfiles());
+      .finally(() => {
+        getData();
+        setSelected(null);
+      });
   });
 
-  const getProfiles = () => {
+  const getData = () => {
     profileService
       .getAll(page)
       .then(({ data : { result, rows }}) => {
@@ -100,7 +103,7 @@ export default () => {
           .catch(ex => Error(ex.message))
           .finally(() => {
             setSelected(undefined);
-            getProfiles();
+            getData();
           });
       });
     }
@@ -109,12 +112,12 @@ export default () => {
         .save(data)
         .then(() => Success('Profile saved successfully'))
         .catch(ex => Error(ex.message))
-        .finally(() => getProfiles());
+        .finally(() => getData());
     }
   }
 
   useEffect(() => {
-    getProfiles();
+    getData();
   }, [page]);
 
   const styles = {

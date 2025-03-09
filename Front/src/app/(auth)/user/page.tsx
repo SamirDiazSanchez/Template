@@ -66,10 +66,15 @@ export default () => {
 
   const profileService = useProfileService();
 
-  const handleDelete = (user: User) => Warning(() => userService.remove(user.userId)
-    .then(() => Success('User deleted successfully'))
-    .catch(ex => Error(ex.message))
-    .finally(() => getUsers()));
+  const handleDelete = (user: User) => Warning(() => {
+    userService.remove(user.userId)
+      .then(() => Success('User deleted successfully'))
+      .catch(ex => Error(ex.message))
+      .finally(() => {
+        getData();
+        setSelected(null);
+      })
+  });
 
   const handleSelected = (data: User[]) => setSelected(data[0]);
 
@@ -87,7 +92,7 @@ export default () => {
           .catch(error => Error(error.message))
           .finally(() => {
             setSelected(undefined);
-            getUsers();
+            getData();
           });
       })
     }
@@ -98,7 +103,7 @@ export default () => {
         .catch(error => Error(error.message))
         .finally(() => {
           setSelected(undefined);
-          getUsers();
+          getData();
         });
     }
   }
@@ -110,7 +115,7 @@ export default () => {
     })
     .catch(error => Error(error.message));
 
-  const getUsers = () => userService
+  const getData = () => userService
     .getAll(page)
     .then(({ data : { result, rows }}) => {
       let users = result.map((user: User) => ({ ...user, profile: profileList.find(profile => profile.profileId === user.profileId) }));
@@ -125,7 +130,7 @@ export default () => {
   }, []);
 
   useEffect(() => {
-    profileList.length > 0 && getUsers();
+    profileList.length > 0 && getData();
   }, [profileList, page]);
 
   return (
