@@ -12,9 +12,5 @@ export const RouteList: Route[] = [
     name: 'Profile',
     path: '/profile',
     icon: <AdminPanelSettingsIcon />
-  },
-  {
-    name: 'Test',
-    path: '/test'
   }
 ];

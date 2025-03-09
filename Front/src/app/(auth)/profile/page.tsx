@@ -86,7 +86,7 @@ export default () => {
         setTotalRows(rows ?? 0);
         setContentData(Array.isArray(profiles) ? profiles : []);
       })
-      .catch(ex => console.log(ex));
+      .catch(ex => Error(ex.message));
   }
 
   const handleSubmit = (data: Profile) => {
