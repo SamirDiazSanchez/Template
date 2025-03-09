@@ -25,15 +25,7 @@ export const ModalSaveComponent = ({
 
   const uidForm = `form-${uuid()}`;
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    control,
-    reset,
-    setValue,
-    clearErrors
-  } = useForm();
+  const hookForm = useForm();
 
   const {
     palette
@@ -41,7 +33,7 @@ export const ModalSaveComponent = ({
 
   const submited = (formData: any) => {
     onSubmit(formData);
-    reset();
+    hookForm.reset();
     handleClose();
   }
 
@@ -50,7 +42,7 @@ export const ModalSaveComponent = ({
   const handleOpen = () => setOpen(true);
 
   const handleCancel = () => {
-    clearErrors();
+    hookForm.clearErrors();
     setCurrentData({});
     handleClose();
   }
@@ -58,7 +50,7 @@ export const ModalSaveComponent = ({
   useEffect(() => {
     if (data) {
       const entries = Object.entries(data);
-      entries.forEach(([key, value]) => setValue(key, value));
+      entries.forEach(([key, value]) => hookForm.setValue(key, value));
     }
     setCurrentData(data ?? {});
   }, [data]);
@@ -106,15 +98,13 @@ export const ModalSaveComponent = ({
 
           <form
             id={uidForm}
-            onSubmit={handleSubmit(submited)} >
+            onSubmit={hookForm.handleSubmit(submited)} >
             <Box sx={styles.form} >
               <Component
                 {...props}
                 data={currentData}
-                register={register}
-                handleSubmit={handleSubmit}
-                errors={errors}
-                control={control} />
+                {...hookForm}
+                errors={hookForm.formState.errors} />
             </Box>
           </form>
 
