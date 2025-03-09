@@ -207,7 +207,10 @@ const CustomComponent = ({
               options={moduleList}
               getOptionLabel={(option) => option.name}
               value={field.value}
-              onChange={(_, v) => field.onChange(v) } 
+              onChange={(_, v) => {
+                const uniqueValues = v.filter((item, index, self) => index === self.findIndex((t) => t.profileId === item.profileId));
+                field.onChange(uniqueValues);
+              }} 
               renderInput={(params) => (
                 <TextField
                   {...params}
