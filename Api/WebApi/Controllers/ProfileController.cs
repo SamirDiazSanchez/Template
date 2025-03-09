@@ -32,7 +32,7 @@ namespace WebApi.Controllers
             _ = Guid.TryParse(User.FindFirstValue(ClaimTypes.NameIdentifier), out Guid userId);
 
             Profile request = new () { Page = page, Filter = filter, SessionId = sessionId, UserCreated = userId };
-            List<Profile>? profileList = profileBll.GetAll(request);
+            List<Profile>? profileList = profileBll.GetList(request);
 
             if (request.Code == null) return Ok(new { Result = profileList, Rows = request.Rows });
             else if (request.Code == 2) return Forbid();

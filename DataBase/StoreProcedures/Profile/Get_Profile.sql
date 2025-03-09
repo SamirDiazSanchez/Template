@@ -12,6 +12,7 @@ SET NOCOUNT ON;
 BEGIN
 	IF @SessionId IS NULL
 	OR @UserCreated IS NULL
+	OR (@Page IS NULL AND @IsActive IS NULL)
 	BEGIN
 		SET @Code = 1;
 		SET @Message = 'Parameter is required';
@@ -43,51 +44,48 @@ BEGIN
 		RETURN;
 	END
 	
-	IF @Page IS NOT NULL
+	IF @Filter IS NOT NULL
 	BEGIN
-		IF @Filter IS NOT NULL
-		BEGIN
-			SELECT @Rows = COUNT(*)
-			FROM [Profile] A
-			WHERE (
-				A.[Modules] LIKE '%' + @Filter + '%'
-				OR A.[ProfileName] LIKE '%' + @Filter + '%'
-			);
-
-			SELECT
-				A.[ProfileId],
-				A.[ProfileName],
-				A.[Created],
-				A.[Updated],
-				A.[UserCreated],
-				A.[UserUpdated],
-				A.[IsActive]
-			FROM [Profile] A
-			WHERE (
-				A.[Modules] LIKE '%' + @Filter + '%'
-				OR A.[ProfileName] LIKE '%' + @Filter + '%'
-			)
-			ORDER BY A.[ProfileName]
-			OFFSET ((@Page - 1) * 10) ROWS
-			FETCH NEXT 10 ROWS ONLY;
-			RETURN;
-		END
-
 		SELECT @Rows = COUNT(*)
-		FROM [Profile] A;
+		FROM [Profile] A
+		WHERE (
+			A.[Modules] LIKE '%' + @Filter + '%'
+			OR A.[ProfileName] LIKE '%' + @Filter + '%'
+		);
 
 		SELECT
 			A.[ProfileId],
 			A.[ProfileName],
-			A.[Modules],
 			A.[Created],
 			A.[Updated],
 			A.[UserCreated],
 			A.[UserUpdated],
 			A.[IsActive]
 		FROM [Profile] A
+		WHERE (
+			A.[Modules] LIKE '%' + @Filter + '%'
+			OR A.[ProfileName] LIKE '%' + @Filter + '%'
+		)
 		ORDER BY A.[ProfileName]
 		OFFSET ((@Page - 1) * 10) ROWS
 		FETCH NEXT 10 ROWS ONLY;
+		RETURN;
 	END
+
+	SELECT @Rows = COUNT(*)
+	FROM [Profile] A;
+
+	SELECT
+		A.[ProfileId],
+		A.[ProfileName],
+		A.[Modules],
+		A.[Created],
+		A.[Updated],
+		A.[UserCreated],
+		A.[UserUpdated],
+		A.[IsActive]
+	FROM [Profile] A
+	ORDER BY A.[ProfileName]
+	OFFSET ((@Page - 1) * 10) ROWS
+	FETCH NEXT 10 ROWS ONLY;
 END

@@ -11,6 +11,5 @@ namespace Domain.models
         public string? ProfileName { get; set; }
         public string? Modules { get; set; }
         public List<string>? ModuleList { get; set; }
-        public new bool? IsActive { get; set; }
     }
 }

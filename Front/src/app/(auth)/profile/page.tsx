@@ -97,7 +97,7 @@ export default () => {
         profileService
           .edit(data)
           .then(() => Success('Profile updated successfully'))
-          .catch(ex => Error())
+          .catch(ex => Error(ex.message))
           .finally(() => {
             setSelected(undefined);
             getProfiles();
@@ -107,15 +107,15 @@ export default () => {
     else {
       profileService
         .save(data)
-        .then((resp) => Success('Profile saved successfully'))
-        .catch(ex => Error())
+        .then(() => Success('Profile saved successfully'))
+        .catch(ex => Error(ex.message))
         .finally(() => getProfiles());
     }
   }
 
   useEffect(() => {
     getProfiles();
-  }, []);
+  }, [page]);
 
   const styles = {
     chipModules: {
