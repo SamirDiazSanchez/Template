@@ -188,7 +188,7 @@ const CustomComponent = ({
         <TextField
           label="Name"
           size="small"
-          defaultValue={data.profileName}
+          defaultValue={data?.profileName}
           {...register('profileName', { required: "This filed is required" })}
           error={!!errors.profileName}
           helperText={errors?.profileName?.message}

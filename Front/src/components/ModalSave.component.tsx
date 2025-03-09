@@ -1,4 +1,4 @@
-import { Box, Button, Modal, Divider, Grid2 as Grid, Typography, useTheme } from "@mui/material";
+import { Box, Button, Divider, Grid2 as Grid, Modal, Typography, useTheme } from "@mui/material";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { v4 as uuid } from 'uuid';
@@ -21,7 +21,6 @@ export const ModalSaveComponent = ({
   titleModal?: string
 }) => {
   const [open, setOpen] = useState<boolean>(false);
-  const [currentData, setCurrentData] = useState({});
 
   const uidForm = `form-${uuid()}`;
 
@@ -41,9 +40,11 @@ export const ModalSaveComponent = ({
 
   const handleOpen = () => setOpen(true);
 
+  const values = hookForm.watch();
+
   const handleCancel = () => {
     hookForm.clearErrors();
-    setCurrentData({});
+    !data && hookForm.reset();
     handleClose();
   }
 
@@ -52,8 +53,7 @@ export const ModalSaveComponent = ({
       const entries = Object.entries(data);
       entries.forEach(([key, value]) => hookForm.setValue(key, value));
     }
-    setCurrentData(data ?? {});
-  }, [data]);
+  }, [data])
 
   const styles = {
     modal: {
@@ -102,7 +102,7 @@ export const ModalSaveComponent = ({
             <Box sx={styles.form} >
               <Component
                 {...props}
-                data={currentData}
+                data={values}
                 {...hookForm}
                 errors={hookForm.formState.errors} />
             </Box>

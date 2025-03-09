@@ -244,10 +244,7 @@ const CustomComponent = ({
               options={profileList}
               getOptionLabel={(option) => option.profileName}
               value={field.value}
-              onChange={(_, v) => {
-                console.log(v);
-                field.onChange(v);
-              }} 
+              onChange={(_, v) => field.onChange(v)} 
               renderInput={(params) => (
                 <TextField
                   {...params}
