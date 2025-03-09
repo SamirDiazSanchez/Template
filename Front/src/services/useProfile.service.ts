@@ -7,7 +7,7 @@ export const useProfileService = () => {
 
   const getAll = (page: number) => instance.get<ResponseApi<Profile>>(`profile?page=${page}`);
 
-  const getList = () => instance.get<Profile>('profile/list');
+  const getList = () => instance.get<Profile[]>('profile/list');
 
   const save = (data: Profile) => instance.post<ResponseApiSave>('profile', data);
 
