@@ -1,12 +1,10 @@
-import DashboardIcon from '@mui/icons-material/Dashboard';
 import { useAuthentication } from '@hooks/useAuthentication.hook';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import HomeIcon from '@mui/icons-material/Home';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
 import { Divider, Drawer, List, ListItem, ListItemButton, ListItemIcon, ListItemText, useTheme } from "@mui/material";
-import { useRouter } from 'next/navigation';
-import React from 'react';
 import { RouteList } from '@utils/RouteList';
+import { useRouter } from 'next/navigation';
 
 export const DrawerComponent = ({
   open,
@@ -68,14 +66,6 @@ export const DrawerComponent = ({
           </ListItemButton>
         </ListItem>
 
-        <ListItem disablePadding>
-          <ListItemButton onClick={() => push(`/dashboard`) } >
-            <ListItemIcon>
-              <DashboardIcon sx={{ color: 'white' }} />
-            </ListItemIcon>
-            <ListItemText primary='Dashboard' />
-          </ListItemButton>
-        </ListItem>
         {
           !!modules && modules?.map(module => {
             return (
